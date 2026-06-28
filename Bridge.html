@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GMT — أداة ربط الجرد بالمتجر</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --red:#D5001C; --red-light:#FFF0F2; --green:#16a34a; --green-light:#f0fdf4;
+  --warn:#d97706; --warn-light:#fffbeb; --blue:#2563eb; --blue-light:#eff6ff;
+  --purple:#7c3aed; --purple-light:#f5f3ff;
+  --bg:#F8F8FB; --surface:#fff; --border:#E5E7EB; --text:#111; --text2:#4B5563; --text3:#9CA3AF;
+  --shadow:0 2px 12px rgba(0,0,0,.07);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* ── Header ── */
+#header{background:var(--red);color:#fff;padding:0 20px;height:58px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,.2);}
+#header .logo{font-size:18px;font-weight:900;letter-spacing:-.5px;}
+#header .sub{font-size:12px;opacity:.8;margin-top:1px;}
+#header .spacer{flex:1;}
+#header .badge{background:rgba(255,255,255,.2);border-radius:8px;padding:4px 12px;font-size:12px;font-weight:700;}
+
+/* ── Tabs ── */
+#tabs{background:#fff;border-bottom:2px solid var(--border);display:flex;padding:0 16px;position:sticky;top:58px;z-index:90;}
+.tab{padding:14px 18px;font-size:13px;font-weight:700;cursor:pointer;color:var(--text3);border-bottom:2px solid transparent;margin-bottom:-2px;transition:.2s;white-space:nowrap;}
+.tab.active{color:var(--red);border-bottom-color:var(--red);}
+.tab:hover:not(.active){color:var(--text);}
+
+/* ── Tab panels ── */
+.tab-panel{display:none;padding:16px;}
+.tab-panel.active{display:block;}
+
+/* ── Stats bar ── */
+.stats-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+.stat-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px 16px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow);}
+.stat-card .num{font-size:22px;font-weight:900;}
+.stat-card .lbl{font-size:11px;color:var(--text3);margin-top:1px;}
+
+/* ── Filters ── */
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center;}
+.chip{padding:5px 14px;border-radius:99px;border:1.5px solid var(--border);background:#fff;font-size:12px;font-weight:700;cursor:pointer;transition:.15s;white-space:nowrap;font-family:'Cairo',sans-serif;}
+.chip.active{background:var(--red);color:#fff;border-color:var(--red);}
+.chip:hover:not(.active){background:var(--bg);}
+.search-box{display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:6px 12px;min-width:200px;flex:1;max-width:320px;}
+.search-box input{border:none;outline:none;font-size:13px;font-family:'Cairo',sans-serif;flex:1;background:transparent;}
+
+/* ── Product card ── */
+.prod-card{background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;transition:border-color .15s;}
+.prod-card:hover{border-color:#d1d5db;}
+.prod-card.linked{border-color:rgba(22,163,74,.3);background:var(--green-light);}
+.prod-card.price-diff{border-color:rgba(217,119,6,.35);background:var(--warn-light);}
+.prod-card .img{width:48px;height:48px;border-radius:10px;background:#f5f5f5;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:22px;}
+.prod-card .img img{width:100%;height:100%;object-fit:cover;}
+.prod-card .info{flex:1;min-width:0;}
+.prod-card .name{font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.prod-card .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:3px;align-items:center;}
+.prod-card .meta span{font-size:11px;color:var(--text3);}
+.prod-card .meta .barcode{font-family:monospace;font-size:10px;background:#f3f4f6;padding:1px 6px;border-radius:4px;color:#555;}
+.prod-card .meta .price{font-weight:700;color:var(--red);font-size:12px;}
+.prod-card .meta .qty{font-weight:700;font-size:11px;}
+.prod-card .actions{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:'Cairo',sans-serif;transition:.15s;white-space:nowrap;}
+.btn-green{background:var(--green);color:#fff;}
+.btn-green:hover{background:#15803d;}
+.btn-red{background:var(--red);color:#fff;}
+.btn-red:hover{background:#b0001a;}
+.btn-ghost{background:#f5f5f5;color:var(--text2);border:1px solid var(--border);}
+.btn-ghost:hover{background:#eee;}
+.btn-blue{background:var(--blue);color:#fff;}
+.btn-blue:hover{background:#1d4ed8;}
+.btn-warn{background:var(--warn);color:#fff;}
+.btn-warn:hover{background:#b45309;}
+.btn-sm{padding:4px 10px;font-size:11px;}
+
+/* ── Status badges ── */
+.badge-green{display:inline-flex;align-items:center;gap:3px;background:#dcfce7;color:var(--green);font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;}
+.badge-red{display:inline-flex;align-items:center;gap:3px;background:var(--red-light);color:var(--red);font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;}
+.badge-warn{display:inline-flex;align-items:center;gap:3px;background:#fef3c7;color:var(--warn);font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;}
+.badge-gray{display:inline-flex;align-items:center;gap:3px;background:#f3f4f6;color:var(--text3);font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;}
+
+/* ── Modal ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal-bg.hidden{display:none;}
+.modal-box{background:#fff;border-radius:18px;max-width:520px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+.modal-head{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-head h3{font-size:15px;font-weight:800;}
+.modal-body{padding:18px 20px;}
+.modal-foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
+.close-btn{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);padding:2px 6px;}
+
+/* ── Form ── */
+.form-group{margin-bottom:14px;}
+.form-label{font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px;}
+.form-input{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:9px 12px;font-size:13px;font-family:'Cairo',sans-serif;outline:none;transition:border .2s;}
+.form-input:focus{border-color:var(--red);}
+
+/* ── Loading ── */
+.spinner{display:inline-block;width:20px;height:20px;border:2.5px solid #f3f3f3;border-top:2.5px solid var(--red);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.8);z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;font-size:14px;font-weight:700;}
+.loading-overlay.hidden{display:none;}
+
+/* ── Toast ── */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:10px 22px;border-radius:99px;font-size:13px;font-weight:600;z-index:2000;transition:opacity .3s;opacity:0;pointer-events:none;}
+#toast.show{opacity:1;}
+
+/* ── Search list in modal ── */
+.match-item{padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);cursor:pointer;margin-bottom:6px;display:flex;align-items:center;gap:10px;transition:.15s;}
+.match-item:hover{background:var(--bg);border-color:#d1d5db;}
+.match-item.selected{border-color:var(--green);background:var(--green-light);}
+
+/* ── Empty state ── */
+.empty{text-align:center;padding:48px 20px;color:var(--text3);}
+.empty .icon{font-size:48px;margin-bottom:12px;opacity:.4;}
+
+/* ── Price compare ── */
+.price-compare{display:flex;align-items:center;gap:10px;background:#f9fafb;border-radius:10px;padding:10px 14px;margin:8px 0;}
+.price-box{flex:1;text-align:center;padding:8px;border-radius:8px;background:#fff;border:1px solid var(--border);}
+.price-box .src{font-size:10px;color:var(--text3);font-weight:600;margin-bottom:3px;}
+.price-box .val{font-size:18px;font-weight:900;}
+
+/* ── Group filter bar ── */
+.group-bar{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;margin-bottom:10px;}
+.group-bar::-webkit-scrollbar{display:none;}
+</style>
+</head>
+<body>
+
+<!-- ══ LOADING ══ -->
+<div id="loading-overlay" class="loading-overlay">
+  <div class="spinner"></div>
+  <span id="loading-text">جارٍ تحميل البيانات...</span>
+</div>
+
+<!-- ══ TOAST ══ -->
+<div id="toast"></div>
+
+<!-- ══ HEADER ══ -->
+<div id="header">
+  <div>
+    <div class="logo">🔗 GMT Bridge</div>
+    <div class="sub">أداة ربط الجرد بالمتجر</div>
+  </div>
+  <div class="spacer"></div>
+  <div class="badge" id="hdr-inv">جرد: —</div>
+  <div class="badge" id="hdr-store">متجر: —</div>
+  <button class="btn btn-ghost btn-sm" onclick="reloadAll()" style="color:#fff;background:rgba(255,255,255,.15);border-color:transparent;">🔄</button>
+  <button class="btn btn-ghost btn-sm" onclick="toggleConfig()" style="color:#fff;background:rgba(255,255,255,.15);border-color:transparent;" title="إعدادات الاتصال">⚙️</button>
+</div>
+
+<!-- Config Panel -->
+<div id="config-panel" style="display:none;background:#1e293b;color:#e2e8f0;padding:14px 20px;font-size:12px;border-bottom:2px solid #C41230;">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:900px;">
+    <div>
+      <div style="font-weight:700;margin-bottom:4px;color:#94a3b8;">🔹 Supabase الجرد — URL</div>
+      <input id="cfg-inv-url" style="width:100%;background:#0f172a;border:1px solid #334155;border-radius:6px;padding:6px 10px;color:#e2e8f0;font-size:11px;direction:ltr;" placeholder="https://xxx.supabase.co">
+      <div style="font-weight:700;margin:6px 0 4px;color:#94a3b8;">Anon Key</div>
+      <input id="cfg-inv-key" style="width:100%;background:#0f172a;border:1px solid #334155;border-radius:6px;padding:6px 10px;color:#e2e8f0;font-size:11px;direction:ltr;" placeholder="eyJ...">
+      <div style="font-weight:700;margin:6px 0 4px;color:#94a3b8;">📄 اسم ملف صفحة المتجر (الذي يفتحه زر "عرض في المتجر")</div>
+      <input id="cfg-storefront-file" style="width:100%;background:#0f172a;border:1px solid #334155;border-radius:6px;padding:6px 10px;color:#e2e8f0;font-size:11px;direction:ltr;" placeholder="index__12_.html">
+    </div>
+    <div>
+      <div style="font-weight:700;margin-bottom:4px;color:#94a3b8;">🔸 Supabase المتجر — URL</div>
+      <input id="cfg-store-url" style="width:100%;background:#0f172a;border:1px solid #334155;border-radius:6px;padding:6px 10px;color:#e2e8f0;font-size:11px;direction:ltr;" placeholder="https://xxx.supabase.co">
+      <div style="font-weight:700;margin:6px 0 4px;color:#94a3b8;">Anon Key</div>
+      <input id="cfg-store-key" style="width:100%;background:#0f172a;border:1px solid #334155;border-radius:6px;padding:6px 10px;color:#e2e8f0;font-size:11px;direction:ltr;" placeholder="eyJ...">
+      <div style="font-weight:700;margin:6px 0 4px;color:#94a3b8;">اسم الجدول</div>
+      <input id="cfg-store-table" style="width:100%;background:#0f172a;border:1px solid #334155;border-radius:6px;padding:6px 10px;color:#e2e8f0;font-size:11px;direction:ltr;" placeholder="gmt_store">
+    </div>
+  </div>
+  <div style="margin-top:10px;display:flex;gap:8px;">
+    <button onclick="applyConfig()" style="background:#C41230;color:white;border:none;border-radius:8px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Cairo',sans-serif;">💾 حفظ وإعادة تحميل</button>
+    <button onclick="toggleConfig()" style="background:#334155;color:#e2e8f0;border:none;border-radius:8px;padding:7px 16px;font-size:12px;cursor:pointer;font-family:'Cairo',sans-serif;">إغلاق</button>
+  </div>
+</div>
+
+<!-- ══ TABS ══ -->
+<div id="tabs">
+  <div class="tab active" onclick="switchTab('inv')">📦 الجرد ← المتجر</div>
+  <div class="tab" onclick="switchTab('store')">🛒 منتجات المتجر</div>
+  <div class="tab" onclick="switchTab('diff')">⚡ اختلاف الأسعار</div>
+</div>
+
+<!-- ══════════════════════════════════════
+     TAB 1 — الجرد ← المتجر
+══════════════════════════════════════ -->
+<div id="tab-inv" class="tab-panel active">
+  <div class="stats-bar">
+    <div class="stat-card"><div><div class="num" id="s1-total" style="color:var(--text)">—</div><div class="lbl">منتجات الجرد</div></div></div>
+    <div class="stat-card"><div><div class="num" id="s1-linked" style="color:var(--green)">—</div><div class="lbl">مرتبط بالمتجر</div></div></div>
+    <div class="stat-card"><div><div class="num" id="s1-unlinked" style="color:var(--warn)">—</div><div class="lbl">غير مرتبط</div></div></div>
+    <div class="stat-card"><div><div class="num" id="s1-nocode" style="color:var(--red)">—</div><div class="lbl">بدون باركود</div></div></div>
+  </div>
+  <div class="filter-bar">
+    <div class="chip active" id="f1-all"      onclick="setF1('all',this)">الكل</div>
+    <div class="chip"        id="f1-linked"   onclick="setF1('linked',this)">✅ مرتبط</div>
+    <div class="chip"        id="f1-unlinked" onclick="setF1('unlinked',this)">🔴 غير مرتبط</div>
+    <div class="chip"        id="f1-nobc"     onclick="setF1('nobc',this)">🔲 بدون باركود</div>
+    <div class="search-box">
+      <svg width="14" height="14" fill="none" stroke="#aaa" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" placeholder="اسم أو باركود..." oninput="renderTab1(this.value)" id="f1-search">
+    </div>
+  </div>
+  <div class="group-bar" id="g1-bar"></div>
+  <div id="list1"></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     TAB 2 — منتجات المتجر
+══════════════════════════════════════ -->
+<div id="tab-store" class="tab-panel">
+  <div class="stats-bar">
+    <div class="stat-card"><div><div class="num" id="s2-total" style="color:var(--text)">—</div><div class="lbl">منتجات المتجر</div></div></div>
+    <div class="stat-card"><div><div class="num" id="s2-linked" style="color:var(--green)">—</div><div class="lbl">مرتبط بالجرد</div></div></div>
+    <div class="stat-card"><div><div class="num" id="s2-nocode" style="color:var(--red)">—</div><div class="lbl">بدون كود جرد</div></div></div>
+  </div>
+  <div class="filter-bar">
+    <div class="chip active" id="f2-all"    onclick="setF2('all',this)">الكل</div>
+    <div class="chip"        id="f2-linked" onclick="setF2('linked',this)">✅ مرتبط</div>
+    <div class="chip"        id="f2-nocode" onclick="setF2('nocode',this)">🔴 بدون كود</div>
+    <div class="search-box">
+      <svg width="14" height="14" fill="none" stroke="#aaa" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" placeholder="اسم المنتج..." oninput="renderTab2(this.value)" id="f2-search">
+    </div>
+  </div>
+  <div class="group-bar" id="g2-bar"></div>
+  <div id="list2"></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     TAB 3 — اختلاف الأسعار
+══════════════════════════════════════ -->
+<div id="tab-diff" class="tab-panel">
+  <div class="stats-bar">
+    <div class="stat-card"><div><div class="num" id="s3-diff" style="color:var(--warn)">—</div><div class="lbl">اختلاف في السعر</div></div></div>
+    <div class="stat-card"><div><div class="num" id="s3-img" style="color:var(--blue)">—</div><div class="lbl">صورة جرد بدون متجر</div></div></div>
+  </div>
+  <div id="list3"></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     MODALS
+══════════════════════════════════════ -->
+
+<!-- Modal: ربط يدوي -->
+<div id="modal-link" class="modal-bg hidden">
+  <div class="modal-box" style="max-width:580px;">
+    <div class="modal-head">
+      <h3 id="ml-title">🔗 ربط المنتج</h3>
+      <button class="close-btn" onclick="closeModal('modal-link')">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- معلومات المنتج المصدر -->
+      <div id="ml-src-info" style="background:var(--bg);border-radius:10px;padding:12px;margin-bottom:14px;"></div>
+
+      <!-- فلتر المجموعات — يُبنى ديناميكياً -->
+      <div style="margin-bottom:10px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px;">فلتر المجموعة:</div>
+        <div id="ml-groups" style="display:flex;gap:6px;flex-wrap:wrap;overflow-x:auto;scrollbar-width:none;"></div>
+      </div>
+
+      <!-- بحث -->
+      <div class="search-box" style="max-width:100%;margin-bottom:10px;">
+        <svg width="14" height="14" fill="none" stroke="#aaa" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" id="ml-search" placeholder="ابحث بالاسم أو الباركود..." oninput="mlRender()">
+      </div>
+
+      <!-- قائمة الاختيار -->
+      <div id="ml-list" style="max-height:260px;overflow-y:auto;"></div>
+
+      <!-- اختلاف السعر -->
+      <div id="ml-price-section" class="hidden" style="margin-top:12px;">
+        <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:12px;">
+          <div style="font-size:12px;font-weight:700;color:var(--warn);margin-bottom:10px;">⚡ اختلاف في السعر — اختر السعر الذي تريد تطبيقه على الاثنين</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <button id="ml-btn-inv" onclick="mlChoosePrice('inv')" style="background:#fff;border:2px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;text-align:center;font-family:'Cairo',sans-serif;transition:.15s;">
+              <div style="font-size:10px;color:var(--text3);margin-bottom:4px;font-weight:600;">سعر الجرد</div>
+              <div id="ml-inv-price" style="font-size:20px;font-weight:900;color:var(--red);">—</div>
+              <div style="font-size:10px;color:var(--text3);margin-top:4px;">يُطبَّق على المتجر</div>
+            </button>
+            <button id="ml-btn-store" onclick="mlChoosePrice('store')" style="background:#fff;border:2px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;text-align:center;font-family:'Cairo',sans-serif;transition:.15s;">
+              <div style="font-size:10px;color:var(--text3);margin-bottom:4px;font-weight:600;">سعر المتجر</div>
+              <div id="ml-store-price" style="font-size:20px;font-weight:900;color:var(--blue);">—</div>
+              <div style="font-size:10px;color:var(--text3);margin-top:4px;">يُطبَّق على الجرد</div>
+            </button>
+          </div>
+          <div id="ml-price-chosen" style="display:none;margin-top:8px;text-align:center;font-size:12px;font-weight:700;color:var(--green);">✅ تم الاختيار</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('modal-link')">إلغاء</button>
+      <button class="btn btn-green" onclick="mlSave()" id="ml-save-btn" disabled>💾 حفظ الربط</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: إنشاء في المتجر -->
+<div id="modal-create" class="modal-bg hidden">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>➕ إنشاء منتج في المتجر</h3>
+      <button class="close-btn" onclick="closeModal('modal-create')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="mc-info" style="background:var(--bg);border-radius:10px;padding:12px;margin-bottom:16px;"></div>
+      <div class="form-group">
+        <div class="form-label">الفئة في المتجر *</div>
+        <select id="mc-cat" class="form-input"></select>
+      </div>
+      <div class="form-group">
+        <div class="form-label">الاسم في المتجر</div>
+        <input type="text" id="mc-name" class="form-input">
+      </div>
+      <div class="form-group">
+        <div class="form-label">السعر ($)</div>
+        <input type="number" id="mc-price" class="form-input" step="0.01">
+      </div>
+      <div style="font-size:11px;color:var(--text3);background:var(--bg);border-radius:8px;padding:10px;line-height:1.6;">
+        📌 سيتم إنشاء المنتج كـ <strong>مسودة في قسم الأدمن</strong> مع الاسم والسعر والصورة والباركود من الجرد.<br>
+        يمكن للأدمن لاحقاً إضافة وصف وصور إضافية وتفعيله.
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('modal-create')">إلغاء</button>
+      <button class="btn btn-green" onclick="mcSave()">➕ إنشاء في المتجر</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: مزامنة سعر -->
+<div id="modal-sync" class="modal-bg hidden">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>⚡ مزامنة السعر</h3>
+      <button class="close-btn" onclick="closeModal('modal-sync')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="ms-info"></div>
+      <div class="price-compare">
+        <div class="price-box"><div class="src">سعر الجرد</div><div class="val" id="ms-inv-price" style="color:var(--red);">—</div></div>
+        <div style="font-size:20px;color:var(--text3);">↔</div>
+        <div class="price-box"><div class="src">سعر المتجر</div><div class="val" id="ms-store-price" style="color:var(--blue);">—</div></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+        <button class="btn btn-red btn-sm" onclick="msSyncPrice('inv')" id="ms-btn-inv">اعتمد سعر الجرد</button>
+        <button class="btn btn-blue btn-sm" onclick="msSyncPrice('store')" id="ms-btn-store">اعتمد سعر المتجر</button>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('modal-sync')">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<script src="gmt-cache.js"></script>
+<script>
+// ══════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════
+// CONFIG — يمكن تعديلها من لوحة الإعدادات ⚙️
+// ══════════════════════════════════════════════
+const _INV_URL_DEFAULT   = 'https://ysawzwtmodkqqbqoiojj.supabase.co';
+const _INV_KEY_DEFAULT   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzYXd6d3Rtb2RrcXFicW9pb2pqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0NjI0OTUsImV4cCI6MjA5MjAzODQ5NX0.g-dBDpHzMsP_0IQAKFxzWkKzc_I13bGUMeYNgcUmrKQ';
+const _STORE_URL_DEFAULT = 'https://tupldwylzrkjzqtaiscv.supabase.co';
+const _STORE_KEY_DEFAULT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1cGxkd3lsenJranpxdGFpc2N2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0OTEzNTQsImV4cCI6MjA5MTA2NzM1NH0.RKsdAg4v7TcuMhBepztJtRdTtsR-f8cMcoDXKmnZXO0';
+const _STORE_TABLE_DEFAULT = 'gmt_store';
+
+let INV_URL_live   = localStorage.getItem('br_inv_url')    || _INV_URL_DEFAULT;
+let INV_KEY_live   = localStorage.getItem('br_inv_key')    || _INV_KEY_DEFAULT;
+let STORE_URL_live = localStorage.getItem('br_store_url')  || _STORE_URL_DEFAULT;
+let STORE_KEY_live = localStorage.getItem('br_store_key')  || _STORE_KEY_DEFAULT;
+let STORE_TABLE_live = localStorage.getItem('br_store_table') || _STORE_TABLE_DEFAULT;
+
+// shortcuts (used in functions below)
+const getInvURL   = () => INV_URL_live;
+const getInvKEY   = () => INV_KEY_live;
+const getStoreURL = () => STORE_URL_live;
+const getStoreKEY = () => STORE_KEY_live;
+const getStoreTable = () => STORE_TABLE_live;
+
+// امسح أي قيم localStorage قديمة غلط
+try {
+  const stored = localStorage.getItem('br_inv_url');
+  if (stored && !stored.startsWith('https://')) {
+    ['br_inv_url','br_inv_key','br_store_url','br_store_key','br_store_table'].forEach(k=>localStorage.removeItem(k));
+    INV_URL_live = _INV_URL_DEFAULT; INV_KEY_live = _INV_KEY_DEFAULT;
+    STORE_URL_live = _STORE_URL_DEFAULT; STORE_KEY_live = _STORE_KEY_DEFAULT;
+    STORE_TABLE_live = _STORE_TABLE_DEFAULT;
+  }
+} catch(e){}
+
+// اسم/مسار ملف صفحة المتجر — قابل للتهيئة (موحّد مع نظام الجرد عبر نفس مفتاح localStorage)
+// كان هذا الاسم ثابتاً بالكود سابقاً، وإن لم يطابق اسم الملف الفعلي فإن زر "عرض في المتجر" يفتح صفحة غير صحيحة
+function getStorefrontFile(){
+  return localStorage.getItem('br_storefront_file') || 'index__12_.html';
+}
+
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+let invProds   = [];   // من قاعدة الجرد
+let storeProds = [];   // من gmt_store.products JSON
+let storeRec   = null; // سجل gmt_store الكامل
+let storeCats  = [];   // كاتيغوريز المتجر
+
+let f1Filter = 'all', f1Group = '', f1Search = '';
+let f2Filter = 'all', f2Group = '', f2Search = '';
+
+// modal state
+let mlPriceChoice = null;
+let mcInvId   = null;
+let msInvId   = null;
+let msStoreId = null;
+
+// ══════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmt(n){ return Number(n||0).toLocaleString('en-US', {minimumFractionDigits:2,maximumFractionDigits:2}); }
+function showLoading(t='جارٍ التحميل...'){ document.getElementById('loading-text').textContent=t; document.getElementById('loading-overlay').classList.remove('hidden'); }
+function hideLoading(){ document.getElementById('loading-overlay').classList.add('hidden'); }
+function toast(msg, dur=2800){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),dur);
+}
+function closeModal(id){ document.getElementById(id).classList.add('hidden'); }
+function openModal(id){ document.getElementById(id).classList.remove('hidden'); }
+
+// إجمالي كمية منتج الجرد
+function invTotal(p){
+  return ['homs','daraa','haleb','kurani','sarmada','fakhouri'].reduce((s,k)=>s+(Number(p[k])||0),0);
+}
+
+// هل منتج الجرد مرتبط بالمتجر؟ (عبر barcode)
+function isInvLinked(invP){
+  if (!invP.barcode) return false;
+  return storeProds.some(sp => sp.barcode && sp.barcode === invP.barcode);
+}
+
+// هل منتج المتجر مرتبط بالجرد؟
+function isStoreLinked(sp){
+  if (!sp.barcode) return false;
+  return invProds.some(ip => ip.barcode && ip.barcode === sp.barcode);
+}
+
+// جلب منتج المتجر المرتبط بمنتج الجرد
+function getStoreMatch(invP){
+  if (!invP.barcode) return null;
+  return storeProds.find(sp => sp.barcode === invP.barcode) || null;
+}
+
+// جلب منتج الجرد المرتبط بمنتج المتجر
+function getInvMatch(sp){
+  if (!sp.barcode) return null;
+  return invProds.find(ip => ip.barcode === sp.barcode) || null;
+}
+
+// ══════════════════════════════════════════════
+// DATA LOADING
+// ══════════════════════════════════════════════
+// ── HTTP helpers — يعملان من file:// ──────────
+function invHeaders(){
+  return { 'apikey': getInvKEY(), 'Authorization': 'Bearer '+getInvKEY(), 'Content-Type': 'application/json' };
+}
+function storeHeaders(){
+  return { 'apikey': getStoreKEY(), 'Authorization': 'Bearer '+getStoreKEY(), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
+}
+
+// لا نحتاج clients — raw fetch يعمل مع Supabase REST من file://
+function initClients(){ /* no-op */ }
+
+// fetch مع timeout 15 ثانية
+async function fetchWithTimeout(url, opts={}, ms=15000){
+  const ctrl = new AbortController();
+  const tid  = setTimeout(()=>ctrl.abort(), ms);
+  try {
+    const r = await fetch(url, {...opts, signal: ctrl.signal});
+    clearTimeout(tid);
+    return r;
+  } catch(e) {
+    clearTimeout(tid);
+    if(e.name==='AbortError') throw new Error('انتهت مهلة الاتصال (15 ثانية) — تحقق من الإنترنت');
+    throw e;
+  }
+}
+
+async function loadInv(){
+  if(window.GMTCache){
+    const sbConfig={url:getInvURL(), key:getInvKEY()};
+    const {rows}=await GMTCache.syncCollection({
+      name:'inv_products', table:'products', sbConfig,
+      liveFields:['homs','daraa','haleb','kurani','sarmada','fakhouri'],
+      imageField:'image_url', idField:'id'
+    });
+    return rows||[];
+  }
+  const cols = 'id,name,short,price,barcode,image_url,group_name,wholesale_price,cost_price,store_url,homs,daraa,haleb,kurani,sarmada,fakhouri';
+  const url  = getInvURL()+'/rest/v1/products?order=name.asc&limit=1000&select='+cols;
+  const r = await fetchWithTimeout(url, { headers: invHeaders() });
+  if(!r.ok){ const t=await r.text().catch(()=>''); throw new Error('الجرد HTTP '+r.status+': '+t.slice(0,200)); }
+  return await r.json();
+}
+
+async function loadStore(){
+  const url = getStoreURL()+'/rest/v1/'+getStoreTable()+'?id=eq.1&select=*';
+  const r = await fetchWithTimeout(url, { headers: storeHeaders() });
+  if(!r.ok){ const t=await r.text().catch(()=>''); throw new Error('المتجر HTTP '+r.status+': '+t.slice(0,200)); }
+  const rows = await r.json();
+  return rows[0] || null;
+}
+
+async function saveStoreProducts(prods){
+  const url = getStoreURL()+'/rest/v1/'+getStoreTable()+'?id=eq.1';
+  const r = await fetch(url, {
+    method: 'PATCH',
+    headers: storeHeaders(),
+    body: JSON.stringify({ products: prods })
+  });
+  if(!r.ok && r.status !== 204){ const t=await r.text().catch(()=>''); throw new Error('حفظ المتجر HTTP '+r.status+': '+t); }
+}
+
+async function patchInv(id, data){
+  const url = getInvURL()+'/rest/v1/products?id=eq.'+encodeURIComponent(id);
+  const r = await fetch(url, {
+    method: 'PATCH',
+    headers: invHeaders(),
+    body: JSON.stringify(data)
+  });
+  if(!r.ok && r.status !== 204){ const t=await r.text().catch(()=>''); throw new Error('تحديث الجرد HTTP '+r.status+': '+t); }
+}
+
+async function reloadAll(){
+  showLoading('جارٍ تحميل بيانات الجرد...');
+  console.log('=== Bridge reloadAll START ===');
+  console.log('INV URL:', getInvURL());
+  console.log('STORE URL:', getStoreURL());
+  console.log('STORE TABLE:', getStoreTable());
+  console.log('supabase lib:', typeof window.supabase);
+  console.log('_sbInv:', _sbInv ? 'OK' : 'NULL');
+  console.log('_sbStore:', _sbStore ? 'OK' : 'NULL');
+
+  try {
+    console.log('Loading inventory...');
+    const inv = await loadInv().catch(e=>{ throw new Error('الجرد: '+e.message); });
+    console.log('Inventory loaded:', Array.isArray(inv) ? inv.length + ' products' : inv);
+    invProds = Array.isArray(inv) ? inv : [];
+
+    showLoading('جارٍ تحميل بيانات المتجر...');
+    console.log('Loading store...');
+    const rec = await loadStore().catch(e=>{ throw new Error('المتجر: '+e.message); });
+    console.log('Store record:', rec ? 'found, products: '+(rec.products?.length||0) : 'NULL/not found');
+    storeRec   = rec;
+
+    if(rec){
+      storeProds = Array.isArray(rec.products)   ? rec.products   : [];
+      storeCats  = Array.isArray(rec.categories) ? rec.categories : [];
+    } else {
+      storeProds = []; storeCats = [];
+      toast('⚠️ لم يُوجد سجل في المتجر (id=1)', 4000);
+    }
+
+    console.log('Rendering...');
+    updateStats();
+    buildGroupBars();
+    renderTab1();
+    renderTab2();
+    renderTab3();
+    document.getElementById('hdr-inv').textContent   = 'جرد: '+invProds.length;
+    document.getElementById('hdr-store').textContent = 'متجر: '+storeProds.length;
+    console.log('=== Bridge reloadAll DONE ===');
+
+  } catch(e){
+    console.error('=== Bridge reloadAll ERROR ===', e);
+    const errMsg = String(e?.message || e || 'خطأ غير معروف');
+    const ol = document.getElementById('loading-overlay');
+    ol.innerHTML = '';
+    const div = document.createElement('div');
+    div.style.cssText = 'text-align:center;padding:30px;max-width:420px;';
+    div.innerHTML = `
+      <div style="font-size:40px;margin-bottom:16px;">❌</div>
+      <div style="font-size:15px;font-weight:700;color:#C41230;margin-bottom:8px;">خطأ في الاتصال</div>
+      <div id="err-msg-box" style="font-size:11px;color:#555;line-height:1.8;margin-bottom:16px;text-align:left;background:#f9fafb;padding:10px;border-radius:8px;font-family:monospace;word-break:break-all;"></div>
+      <div style="font-size:11px;color:#888;margin-bottom:16px;">افتح F12 → Console لمزيد من التفاصيل</div>
+      <button onclick="reloadAll()" style="background:#C41230;color:white;border:none;border-radius:10px;padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Cairo',sans-serif;margin-left:8px;">🔄 إعادة المحاولة</button>
+      <button onclick="toggleConfig()" style="background:#f5f5f5;border:none;border-radius:10px;padding:10px 16px;font-size:13px;cursor:pointer;font-family:'Cairo',sans-serif;">⚙️ إعدادات</button>`;
+    ol.appendChild(div);
+    document.getElementById('err-msg-box').textContent = errMsg;
+    return;
+  }
+  hideLoading();
+}
+
+// ══════════════════════════════════════════════
+// CONFIG PANEL
+// ══════════════════════════════════════════════
+let _cfgVisible = false;
+
+function toggleConfig(){
+  _cfgVisible = !_cfgVisible;
+  const p = document.getElementById('config-panel');
+  p.style.display = _cfgVisible ? 'block' : 'none';
+  if(_cfgVisible){
+    document.getElementById('cfg-inv-url').value    = localStorage.getItem('br_inv_url')    || INV_URL_live;
+    document.getElementById('cfg-inv-key').value    = localStorage.getItem('br_inv_key')    || INV_KEY_live;
+    document.getElementById('cfg-store-url').value  = localStorage.getItem('br_store_url')  || STORE_URL_live;
+    document.getElementById('cfg-store-key').value  = localStorage.getItem('br_store_key')  || STORE_KEY_live;
+    document.getElementById('cfg-store-table').value= localStorage.getItem('br_store_table')|| STORE_TABLE_live;
+    document.getElementById('cfg-storefront-file').value = getStorefrontFile();
+  }
+}
+window.toggleConfig = toggleConfig;
+
+function applyConfig(){
+  const iu  = document.getElementById('cfg-inv-url').value.trim().replace(/\/$/,'');
+  const ik  = document.getElementById('cfg-inv-key').value.trim();
+  const su  = document.getElementById('cfg-store-url').value.trim().replace(/\/$/,'');
+  const sk  = document.getElementById('cfg-store-key').value.trim();
+  const st  = document.getElementById('cfg-store-table').value.trim() || 'gmt_store';
+  const sf  = document.getElementById('cfg-storefront-file').value.trim() || 'index__12_.html';
+  if(!iu||!ik||!su||!sk){ alert('يرجى ملء جميع الحقول'); return; }
+  localStorage.setItem('br_inv_url',    iu);
+  localStorage.setItem('br_inv_key',    ik);
+  localStorage.setItem('br_store_url',  su);
+  localStorage.setItem('br_store_key',  sk);
+  localStorage.setItem('br_store_table',st);
+  localStorage.setItem('br_storefront_file', sf);
+  INV_URL_live=iu; INV_KEY_live=ik;
+  STORE_URL_live=su; STORE_KEY_live=sk;
+  STORE_TABLE_live=st;
+  toggleConfig();
+  reloadAll();
+}
+window.applyConfig=applyConfig;
+function updateStats(){
+  // Tab1
+  const linked1   = invProds.filter(p=>isInvLinked(p)).length;
+  const unlinked1 = invProds.filter(p=>!isInvLinked(p)).length;
+  const nobc1     = invProds.filter(p=>!p.barcode).length;
+  document.getElementById('s1-total').textContent   = invProds.length;
+  document.getElementById('s1-linked').textContent  = linked1;
+  document.getElementById('s1-unlinked').textContent= unlinked1;
+  document.getElementById('s1-nocode').textContent  = nobc1;
+
+  // Tab2
+  const linked2 = storeProds.filter(sp=>isStoreLinked(sp)).length;
+  const nocode2 = storeProds.filter(sp=>!sp.barcode).length;
+  document.getElementById('s2-total').textContent  = storeProds.length;
+  document.getElementById('s2-linked').textContent = linked2;
+  document.getElementById('s2-nocode').textContent = nocode2;
+
+  // Tab3
+  const diffs = getPriceDiffs();
+  const imgDiffs = getImgDiffs();
+  document.getElementById('s3-diff').textContent = diffs.length;
+  document.getElementById('s3-img').textContent  = imgDiffs.length;
+}
+
+// ══════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════
+function switchTab(id){
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    const ids=['inv','store','diff'];
+    t.classList.toggle('active', ids[i]===id);
+    document.getElementById('tab-'+ids[i]).classList.toggle('active', ids[i]===id);
+  });
+}
+
+// ══════════════════════════════════════════════
+// GROUP BARS
+// ══════════════════════════════════════════════
+function buildGroupBars(){
+  // Tab1 — groups from inventory
+  const g1 = [...new Set(invProds.map(p=>p.group_name||'').filter(Boolean))].sort();
+  const b1 = document.getElementById('g1-bar');
+  b1.innerHTML = `<div class="chip active" onclick="setG1('',this)">كل المجموعات</div>`+
+    g1.map(g=>`<div class="chip" onclick="setG1('${esc(g)}',this)">${esc(g)}</div>`).join('');
+
+  // Tab2 — categories from store
+  const g2 = [...new Set(storeProds.map(sp=>{
+    const cat = storeCats.find(c=>c.id===(sp.category_ids?.[0]||sp.category_id));
+    return cat?.name||'';
+  }).filter(Boolean))].sort();
+  const b2 = document.getElementById('g2-bar');
+  b2.innerHTML = `<div class="chip active" onclick="setG2('',this)">كل الفئات</div>`+
+    g2.map(g=>`<div class="chip" onclick="setG2('${esc(g)}',this)">${esc(g)}</div>`).join('');
+}
+
+function setG1(g,el){ f1Group=g; document.querySelectorAll('#g1-bar .chip').forEach(c=>c.classList.remove('active')); el.classList.add('active'); renderTab1(); }
+function setG2(g,el){ f2Group=g; document.querySelectorAll('#g2-bar .chip').forEach(c=>c.classList.remove('active')); el.classList.add('active'); renderTab2(); }
+
+// ══════════════════════════════════════════════
+// TAB 1 — الجرد ← المتجر
+// ══════════════════════════════════════════════
+function setF1(f,el){ f1Filter=f; document.querySelectorAll('[id^=f1-]').forEach(c=>c.classList.remove('active')); el.classList.add('active'); renderTab1(); }
+
+function renderTab1(q){
+  if(q!==undefined) f1Search=q.toLowerCase().trim();
+  let list = invProds.filter(p=>{
+    if(f1Search && !(p.name||'').toLowerCase().includes(f1Search) && !(p.barcode||'').includes(f1Search)) return false;
+    if(f1Group && (p.group_name||'')!==f1Group) return false;
+    if(f1Filter==='linked')   return isInvLinked(p);
+    if(f1Filter==='unlinked') return !isInvLinked(p);
+    if(f1Filter==='nobc')     return !p.barcode;
+    return true;
+  });
+
+  const c = document.getElementById('list1');
+  if(!list.length){ c.innerHTML=`<div class="empty"><div class="icon">📭</div>لا توجد نتائج</div>`; return; }
+
+  c.innerHTML = list.map(p=>{
+    const linked  = isInvLinked(p);
+    const match   = getStoreMatch(p);
+    const total   = invTotal(p);
+    const qtyColor= total===0?'var(--text3)':total<=2?'var(--warn)':'var(--green)';
+
+    return `<div class="prod-card ${linked?'linked':''}">
+      <div class="img">${p.image_url?`<img src="${esc(p.image_url)}" loading="lazy" onerror="this.outerHTML='📦'">`:'📦'}</div>
+      <div class="info">
+        <div class="name">${esc(p.name)}</div>
+        <div class="meta">
+          ${p.barcode?`<span class="barcode">${esc(p.barcode)}</span>`:
+            `<span style="color:var(--red);font-size:10px;font-weight:700;">⚠️ بدون باركود</span>`}
+          <span class="price">$${fmt(p.price)}</span>
+          <span class="qty" style="color:${qtyColor};">📦 ${total}</span>
+          ${p.group_name?`<span>${esc(p.group_name)}</span>`:''}
+        </div>
+        ${linked && match?`<div style="margin-top:4px;font-size:11px;color:var(--green);display:flex;align-items:center;gap:4px;">
+          ✅ مرتبط: <strong>${esc(match.name||match.short_name||'—')}</strong>
+          ${match.price!=p.price?`<span style="color:var(--warn);font-size:10px;">(سعر المتجر: $${fmt(match.price)})</span>`:''}
+        </div>`:''}
+        ${!p.barcode?`<div style="margin-top:4px;font-size:10px;color:var(--text3);">لا يمكن الربط بدون باركود — أضف باركود أولاً</div>`:''}
+      </div>
+      <div class="actions">
+        ${linked?`
+          <a href="${esc(match?.images?.[0]||'#')}" target="_blank" class="btn btn-ghost btn-sm" style="display:${match?.images?.[0]?'inline-flex':'none'}">🖼️</a>
+          ${match?.price!=p.price?`<button class="btn btn-warn btn-sm" onclick="openSyncModal('${p.id}','${match?.id||''}')">⚡ سعر</button>`:''}
+          <button class="btn btn-ghost btn-sm" onclick="openLinkModal('${p.id}')">🔗 تعديل</button>
+        `:`
+          ${p.barcode?`
+            <button class="btn btn-green btn-sm" onclick="openLinkModal('${p.id}')">🔗 ربط</button>
+            <button class="btn btn-blue btn-sm" onclick="openCreateModal('${p.id}')">➕ أنشئ</button>
+          `:''}
+        `}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+// TAB 2 — منتجات المتجر
+// ══════════════════════════════════════════════
+function setF2(f,el){ f2Filter=f; document.querySelectorAll('[id^=f2-]').forEach(c=>c.classList.remove('active')); el.classList.add('active'); renderTab2(); }
+
+function renderTab2(q){
+  if(q!==undefined) f2Search=q.toLowerCase().trim();
+  let list = storeProds.filter(sp=>{
+    if(f2Search && !(sp.name||'').toLowerCase().includes(f2Search) && !(sp.barcode||'').includes(f2Search)) return false;
+    if(f2Group){
+      const cat = storeCats.find(c=>c.id===(sp.category_ids?.[0]||sp.category_id));
+      if((cat?.name||'')!==f2Group) return false;
+    }
+    if(f2Filter==='linked') return isStoreLinked(sp);
+    if(f2Filter==='nocode') return !sp.barcode;
+    return true;
+  });
+
+  const c = document.getElementById('list2');
+  if(!list.length){ c.innerHTML=`<div class="empty"><div class="icon">📭</div>لا توجد نتائج</div>`; return; }
+
+  c.innerHTML = list.map(sp=>{
+    const linked = isStoreLinked(sp);
+    const match  = getInvMatch(sp);
+    const cat    = storeCats.find(c=>c.id===(sp.category_ids?.[0]||sp.category_id));
+
+    return `<div class="prod-card ${linked?'linked':''}">
+      <div class="img">${sp.images?.[0]?`<img src="${esc(sp.images[0])}" loading="lazy" onerror="this.outerHTML='🛒'">`:'🛒'}</div>
+      <div class="info">
+        <div class="name">${esc(sp.name||sp.short_name||'—')}</div>
+        <div class="meta">
+          ${sp.barcode?`<span class="barcode">${esc(sp.barcode)}</span>`:
+            `<span style="color:var(--red);font-size:10px;font-weight:700;">⚠️ بدون كود جرد</span>`}
+          <span class="price">$${fmt(sp.price)}</span>
+          ${cat?`<span>${esc(cat.name)}</span>`:''}
+        </div>
+        ${linked&&match?`<div style="margin-top:4px;font-size:11px;color:var(--green);">✅ مرتبط بجرد: <strong>${esc(match.name)}</strong></div>`:''}
+        ${!sp.barcode?`<div style="margin-top:4px;font-size:10px;color:var(--text3);">أضف كود الجرد (barcode) لهذا المنتج لإتمام الربط</div>`:''}
+      </div>
+      <div class="actions">
+        ${linked?`<span class="badge-green">✅ مرتبط</span>`:
+          `<button class="btn btn-red btn-sm" onclick="openLinkFromStore('${esc(sp.id)}')">🔗 ربط بالجرد</button>`}
+        ${sp.images?.[0]?`<a href="${esc(sp.images[0])}" target="_blank" class="btn btn-ghost btn-sm">🖼️</a>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+// TAB 3 — اختلاف الأسعار + صور
+// ══════════════════════════════════════════════
+function getPriceDiffs(){
+  return invProds.filter(p=>{
+    if(!p.barcode) return false;
+    const sp = getStoreMatch(p);
+    if(!sp) return false;
+    return Math.abs((sp.price||0)-(p.price||0)) > 0.01;
+  });
+}
+
+function getImgDiffs(){
+  return invProds.filter(p=>{
+    if(!p.image_url||!p.barcode) return false;
+    const sp = getStoreMatch(p);
+    if(!sp) return false;
+    const hasInInv = p.image_url;
+    const alreadyInStore = (sp.images||[]).includes(p.image_url);
+    return hasInInv && !alreadyInStore;
+  });
+}
+
+function renderTab3(){
+  const diffs    = getPriceDiffs();
+  const imgDiffs = getImgDiffs();
+  let html = '';
+
+  if(diffs.length){
+    html += `<div style="font-size:14px;font-weight:800;margin-bottom:12px;">⚡ اختلاف في الأسعار (${diffs.length})</div>`;
+    html += diffs.map(p=>{
+      const sp = getStoreMatch(p);
+      return `<div class="prod-card price-diff">
+        <div class="img">${p.image_url?`<img src="${esc(p.image_url)}" loading="lazy" onerror="this.outerHTML='📦'">`:'📦'}</div>
+        <div class="info">
+          <div class="name">${esc(p.name)}</div>
+          <div class="meta">
+            ${p.barcode?`<span class="barcode">${esc(p.barcode)}</span>`:''}
+            <span style="color:var(--red);font-size:11px;font-weight:700;">جرد: $${fmt(p.price)}</span>
+            <span style="color:var(--blue);font-size:11px;font-weight:700;">متجر: $${fmt(sp?.price)}</span>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-red btn-sm" onclick="openSyncModal('${p.id}','${sp?.id||''}')">⚡ مزامنة</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  if(imgDiffs.length){
+    html += `<div style="font-size:14px;font-weight:800;margin:20px 0 12px;">🖼️ صور الجرد غير موجودة في المتجر (${imgDiffs.length})</div>`;
+    html += imgDiffs.map(p=>{
+      const sp = getStoreMatch(p);
+      return `<div class="prod-card">
+        <div class="img"><img src="${esc(p.image_url)}" loading="lazy" onerror="this.outerHTML='📦'"></div>
+        <div class="info">
+          <div class="name">${esc(p.name)}</div>
+          <div class="meta">
+            ${p.barcode?`<span class="barcode">${esc(p.barcode)}</span>`:''}
+            <span>صورة الجرد غير موجودة في المتجر</span>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-blue btn-sm" onclick="addImgToStore('${p.id}','${sp?.id||''}')">🖼️ أضف للمتجر</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  if(!html) html = `<div class="empty"><div class="icon">✅</div>لا يوجد اختلاف في الأسعار أو الصور! كل شيء متزامن.</div>`;
+  document.getElementById('list3').innerHTML = html;
+}
+
+// ══════════════════════════════════════════════
+// MODAL: ربط — يعمل من الجهتين
+// mlDir: 'inv_to_store' | 'store_to_inv'
+// mlSrcId: id المنتج المصدر
+// ══════════════════════════════════════════════
+let mlDir       = 'inv_to_store';
+let mlSrcId     = null;
+let mlMatchId   = null;
+// mlPriceChoice معرّفة أعلاه
+let mlGroupFilter = '';
+
+// فتح من الجرد → يبحث في المتجر
+function openLinkModal(invId){
+  mlDir='inv_to_store'; mlSrcId=String(invId); mlMatchId=null; mlPriceChoice=null; mlGroupFilter='';
+  const p=invProds.find(x=>String(x.id)===String(invId)); if(!p) return;
+  document.getElementById('ml-title').textContent='🔗 ربط منتج الجرد بالمتجر';
+  document.getElementById('ml-src-info').innerHTML=_mlInfoHtml(p,'inv');
+  _mlBuildGroups('store');
+  document.getElementById('ml-search').value='';
+  document.getElementById('ml-price-section').classList.add('hidden');
+  document.getElementById('ml-save-btn').disabled=true;
+  mlRender();
+  openModal('modal-link');
+}
+
+// فتح من المتجر → يبحث في الجرد
+function openLinkFromStore(storeId){
+  mlDir='store_to_inv'; mlSrcId=String(storeId); mlMatchId=null; mlPriceChoice=null; mlGroupFilter='';
+  const sp=storeProds.find(x=>String(x.id)===String(storeId)); if(!sp) return;
+  document.getElementById('ml-title').textContent='🔗 ربط منتج المتجر بالجرد';
+  document.getElementById('ml-src-info').innerHTML=_mlInfoHtml(sp,'store');
+  _mlBuildGroups('inv');
+  document.getElementById('ml-search').value='';
+  document.getElementById('ml-price-section').classList.add('hidden');
+  document.getElementById('ml-save-btn').disabled=true;
+  mlRender();
+  openModal('modal-link');
+}
+window.openLinkFromStore=openLinkFromStore;
+
+function _mlInfoHtml(p, side){
+  const img = side==='inv' ? p.image_url : p.images?.[0];
+  const name = side==='inv' ? p.name : (p.name||p.short_name||'—');
+  const bc   = p.barcode||'';
+  const pr   = parseFloat(p.price||0).toFixed(2);
+  return `<div style="display:flex;gap:10px;align-items:center;">
+    ${img?`<img src="${esc(img)}" style="width:44px;height:44px;border-radius:8px;object-fit:cover;" onerror="this.style.display='none'">`:`<div style="width:44px;height:44px;background:#f5f5f5;border-radius:8px;display:flex;align-items:center;justify-content:center;">${side==='inv'?'📦':'🛒'}</div>`}
+    <div>
+      <div style="font-size:13px;font-weight:700;">${esc(name)}</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:2px;">${bc?`<span style="font-family:monospace;">${esc(bc)}</span> — `:''}<strong>$${pr}</strong></div>
+    </div>
+  </div>`;
+}
+
+// بناء chips المجموعات — targetSide: الجانب الذي سنبحث فيه
+function _mlBuildGroups(targetSide){
+  const bar = document.getElementById('ml-groups');
+  let groups = [];
+  if(targetSide==='store'){
+    groups = [...new Set(storeProds.map(sp=>{
+      const cat=storeCats.find(c=>c.id===(sp.category_ids?.[0]||sp.category_id));
+      return cat?.name||'';
+    }).filter(Boolean))].sort();
+  } else {
+    groups = [...new Set(invProds.map(p=>p.group_name||'').filter(Boolean))].sort();
+  }
+  bar.innerHTML = `<div class="chip active" style="font-size:11px;padding:3px 10px;" onclick="mlSetGroup('',this)">كل المجموعات</div>`+
+    groups.map(g=>`<div class="chip" style="font-size:11px;padding:3px 10px;" onclick="mlSetGroup('${esc(g)}',this)">${esc(g)}</div>`).join('');
+}
+
+function mlSetGroup(g, el){
+  mlGroupFilter=g;
+  document.querySelectorAll('#ml-groups .chip').forEach(c=>{ c.classList.remove('active'); });
+  el.classList.add('active');
+  mlRender();
+}
+window.mlSetGroup=mlSetGroup;
+
+// رسم قائمة الاختيار
+function mlRender(){
+  const q=(document.getElementById('ml-search')?.value||'').toLowerCase().trim();
+  let list=[];
+
+  if(mlDir==='inv_to_store'){
+    // نبحث في المتجر
+    list=storeProds.filter(sp=>{
+      if(q && !(sp.name||'').toLowerCase().includes(q) && !(sp.barcode||'').includes(q)) return false;
+      if(mlGroupFilter){
+        const cat=storeCats.find(c=>c.id===(sp.category_ids?.[0]||sp.category_id));
+        if((cat?.name||'')!==mlGroupFilter) return false;
+      }
+      return true;
+    });
+  } else {
+    // نبحث في الجرد
+    list=invProds.filter(p=>{
+      if(q && !(p.name||'').toLowerCase().includes(q) && !(p.barcode||'').includes(q)) return false;
+      if(mlGroupFilter && (p.group_name||'')!==mlGroupFilter) return false;
+      return true;
+    });
+  }
+
+  const c=document.getElementById('ml-list');
+  if(!list.length){ c.innerHTML=`<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">لا توجد نتائج</div>`; return; }
+
+  c.innerHTML=list.slice(0,40).map(item=>{
+    const isStore = mlDir==='inv_to_store';
+    const img    = isStore ? item.images?.[0] : item.image_url;
+    const name   = isStore ? (item.name||item.short_name||'—') : item.name;
+    const bc     = item.barcode||'';
+    const pr     = parseFloat(item.price||0).toFixed(2);
+    const sel    = String(mlMatchId)===String(item.id);
+    const cat    = isStore ? (storeCats.find(c=>c.id===(item.category_ids?.[0]||item.category_id))?.name||'') : (item.group_name||'');
+
+    return `<div class="match-item ${sel?'selected':''}" onclick="mlSelect('${esc(String(item.id))}', ${parseFloat(item.price||0)})">
+      <div style="width:36px;height:36px;background:#f5f5f5;border-radius:8px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+        ${img?`<img src="${esc(img)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.outerHTML='<span style=font-size:18px>${isStore?'🛒':'📦'}</span>'">`:`<span style="font-size:18px;">${isStore?'🛒':'📦'}</span>`}
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(name)}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px;display:flex;gap:6px;">
+          ${bc?`<span style="font-family:monospace;">${esc(bc)}</span>`:''}
+          <span style="font-weight:700;color:var(--red);">$${parseFloat(item.price||0).toFixed(2)}</span>
+          ${cat?`<span style="background:#f3f4f6;border-radius:4px;padding:0 5px;">${esc(cat)}</span>`:''}
+        </div>
+      </div>
+      ${sel?'<span class="badge-green">✅</span>':''}
+    </div>`;
+  }).join('');
+}
+window.mlRender=mlRender;
+
+function mlSelect(itemId, itemPrice){
+  mlMatchId = String(itemId);
+
+  // السعر المصدر — من الكيان الذي فتحنا الـ modal منه
+  const srcProd = mlDir==='inv_to_store'
+    ? invProds.find(x=>String(x.id)===String(mlSrcId))
+    : storeProds.find(x=>String(x.id)===String(mlSrcId));
+
+  const srcPrice  = parseFloat(srcProd?.price || 0);
+  const destPrice = parseFloat(itemPrice || 0);
+
+  const invPrice   = mlDir==='inv_to_store' ? srcPrice  : destPrice;
+  const storePrice = mlDir==='inv_to_store' ? destPrice : srcPrice;
+  const priceDiff  = Math.abs(invPrice - storePrice) > 0.01;
+
+  const ps = document.getElementById('ml-price-section');
+  // دائماً نعرض السعرين حتى لو متساويان — للتأكيد
+  document.getElementById('ml-inv-price').textContent   = '$'+invPrice.toFixed(2);
+  document.getElementById('ml-store-price').textContent = '$'+storePrice.toFixed(2);
+
+  if(priceDiff){
+    ps.classList.remove('hidden');
+    mlPriceChoice = null;
+    document.getElementById('ml-price-chosen').style.display = 'none';
+    ['ml-btn-inv','ml-btn-store'].forEach(id=>{
+      document.getElementById(id).style.borderColor = 'var(--border)';
+      document.getElementById(id).style.background  = '#fff';
+    });
+    document.getElementById('ml-save-btn').disabled = true;
+  } else {
+    // نفس السعر — نعرض القسم معلوماتياً لكن نفعّل الحفظ مباشرة
+    ps.classList.remove('hidden');
+    mlPriceChoice = 'same';
+    document.getElementById('ml-price-chosen').style.display = 'block';
+    document.getElementById('ml-price-chosen').textContent = '✅ السعران متطابقان — سيتم الربط بدون تغيير';
+    document.getElementById('ml-price-chosen').style.color = 'var(--green)';
+    ['ml-btn-inv','ml-btn-store'].forEach(id=>{
+      document.getElementById(id).style.borderColor = 'var(--border)';
+      document.getElementById(id).style.background  = '#f9fafb';
+    });
+    document.getElementById('ml-save-btn').disabled = false;
+  }
+  mlRender();
+}
+window.mlSelect=mlSelect;
+
+function mlChoosePrice(choice){
+  mlPriceChoice = choice;
+  // تلوين الزر المختار
+  const btnInv   = document.getElementById('ml-btn-inv');
+  const btnStore = document.getElementById('ml-btn-store');
+  btnInv.style.borderColor   = choice==='inv'   ? 'var(--red)'  : 'var(--border)';
+  btnInv.style.background    = choice==='inv'   ? '#fff0f2'     : '#fff';
+  btnStore.style.borderColor = choice==='store' ? 'var(--blue)' : 'var(--border)';
+  btnStore.style.background  = choice==='store' ? '#eff6ff'     : '#fff';
+  document.getElementById('ml-price-chosen').style.display = 'block';
+  document.getElementById('ml-price-chosen').textContent =
+    choice==='inv' ? '✅ سيُطبَّق سعر الجرد على المتجر' : '✅ سيُطبَّق سعر المتجر على الجرد';
+  document.getElementById('ml-save-btn').disabled = false;
+}
+window.mlChoosePrice=mlChoosePrice;
+
+async function mlSave(){
+  if(!mlSrcId||!mlMatchId){toast('❌ اختر منتجاً أولاً');return;}
+  const invId   = mlDir==='inv_to_store' ? mlSrcId  : mlMatchId;
+  const storeId = mlDir==='inv_to_store' ? mlMatchId : mlSrcId;
+  const invP    = invProds.find(x=>String(x.id)===String(invId));
+  const storeP  = storeProds.find(x=>String(x.id)===String(storeId));
+  if(!invP||!storeP){toast('❌ بيانات غير مكتملة');return;}
+  if(!invP.barcode){toast('❌ منتج الجرد بدون باركود — أضف باركود أولاً');return;}
+
+  // إذا في فرق بالسعر ولم يختر بعد
+  const priceDiff = Math.abs((invP.price||0)-(storeP.price||0))>0.01;
+  if(priceDiff && !mlPriceChoice){toast('⚡ اختر السعر الذي تريد تطبيقه أولاً');return;}
+
+  showLoading('جارٍ حفظ الربط...');
+  try{
+    // السعر الموحّد
+    const finalPrice = mlPriceChoice==='inv'   ? (invP.price||0)
+                     : mlPriceChoice==='store' ? (storeP.price||0)
+                     : (invP.price||0); // same — لا فرق
+
+    // 1. تحديث المتجر: كتابة barcode + السعر الموحّد
+    const updatedProds = storeProds.map(sp =>
+      String(sp.id)===String(storeId) ? {...sp, barcode:invP.barcode, price:finalPrice} : sp
+    );
+    await saveStoreProducts(updatedProds);
+
+    // 2. تحديث الجرد: السعر الموحّد + store_url (رابط مطلق)
+    const storeBase = window.location.href.includes('bridge')
+      ? window.location.href.replace(/bridge[^/]*$/, getStorefrontFile())
+      : getStorefrontFile();
+    const storePageUrl = storeBase + '#product=' + encodeURIComponent(storeId);
+    await patchInv(invId, { price: finalPrice, store_url: storePageUrl });
+
+    // تحديث محلي
+    storeProds = updatedProds;
+    const ii = invProds.findIndex(x=>x.id===invId);
+    if(ii>=0){ invProds[ii].price=finalPrice; invProds[ii].store_url=storePageUrl; }
+
+    updateStats(); buildGroupBars(); renderTab1(); renderTab2(); renderTab3();
+    closeModal('modal-link');
+    toast('✅ تم الربط — الباركود والسعر ($'+parseFloat(finalPrice).toFixed(2)+') محدَّثان في الجهتين');
+  }catch(e){ toast('❌ '+e.message); }
+  hideLoading();
+}
+window.mlSave=mlSave;
+
+// ══════════════════════════════════════════════
+// MODAL: إنشاء في المتجر
+// ══════════════════════════════════════════════
+function openCreateModal(invId){
+  const p=invProds.find(x=>x.id===invId);if(!p)return;
+  mcInvId=invId;
+  document.getElementById('mc-name').value=p.name||'';
+  document.getElementById('mc-price').value=p.price||'';
+  document.getElementById('mc-info').innerHTML=`
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
+      ${p.image_url?`<img src="${esc(p.image_url)}" style="width:44px;height:44px;border-radius:8px;object-fit:cover;">`:'<div style="font-size:28px;">📦</div>'}
+      <div>
+        <div style="font-weight:700;">${esc(p.name)}</div>
+        <div style="font-size:11px;color:var(--text3);">${p.barcode?`باركود: ${esc(p.barcode)}`:''} — $${fmt(p.price)} — كمية: ${invTotal(p)}</div>
+      </div>
+    </div>`;
+  // بناء قائمة الفئات
+  const cats=storeCats.sort((a,b)=>(a.order||0)-(b.order||0));
+  document.getElementById('mc-cat').innerHTML=
+    `<option value="">-- اختر فئة --</option>`+
+    cats.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
+  openModal('modal-create');
+}
+
+async function mcSave(){
+  const p=invProds.find(x=>x.id===mcInvId);if(!p)return;
+  const catId=document.getElementById('mc-cat').value;
+  if(!catId){toast('❌ اختر فئة أولاً');return;}
+  const name=document.getElementById('mc-name').value.trim()||p.name;
+  const price=parseFloat(document.getElementById('mc-price').value)||p.price||0;
+
+  showLoading('جارٍ الإنشاء...');
+  try {
+    const newProd={
+      id: 'p_' + Date.now(),   // ID بسيط متوافق مع المتجر
+      inv_id: p.id,
+      barcode: p.barcode || '',
+      name,
+      short_name: p.short || name,
+      price,
+      description: '',
+      images: p.image_url ? [p.image_url] : [],
+      category_id: catId,
+      category_ids: [catId],
+      order: storeProds.length + 1,
+      stock: invTotal(p),
+      options: []
+    };
+
+    const updatedProds=[...storeProds, newProd];
+    await saveStoreProducts(updatedProds);
+
+    // تحديث store_url في الجرد
+    const storeUrl=getStorefrontFile()+'#product='+newProd.id;
+    await patchInv(p.id, { store_url: storeUrl });
+
+    storeProds=updatedProds;
+    const idx=invProds.findIndex(x=>x.id===p.id);
+    if(idx>=0) invProds[idx].store_url=storeUrl;
+
+    updateStats(); buildGroupBars(); renderTab1(); renderTab2(); renderTab3();
+    closeModal('modal-create');
+    toast('✅ تم إنشاء المنتج في المتجر — يظهر الآن في فئة: '+storeCats.find(c=>c.id===catId)?.name);
+  } catch(e){ toast('❌ '+e.message); }
+  hideLoading();
+}
+
+// ══════════════════════════════════════════════
+// MODAL: مزامنة السعر
+// ══════════════════════════════════════════════
+function openSyncModal(invId, storeId){
+  const invP  =invProds.find(x=>x.id===invId);
+  const storeP=storeProds.find(x=>x.id===storeId);
+  if(!invP||!storeP) return;
+  msInvId=invId; msStoreId=storeId;
+  document.getElementById('ms-info').innerHTML=`<div style="font-size:13px;font-weight:700;margin-bottom:8px;">${esc(invP.name)}</div>`;
+  document.getElementById('ms-inv-price').textContent='$'+fmt(invP.price);
+  document.getElementById('ms-store-price').textContent='$'+fmt(storeP.price);
+  openModal('modal-sync');
+}
+
+async function msSyncPrice(src){
+  const invP  =invProds.find(x=>x.id===msInvId);
+  const storeP=storeProds.find(x=>x.id===msStoreId);
+  if(!invP||!storeP) return;
+
+  const newPrice=src==='inv'?invP.price:storeP.price;
+  showLoading('جارٍ مزامنة السعر...');
+  try {
+    if(src==='inv'){
+      const updatedProds=storeProds.map(sp=>sp.id===msStoreId?{...sp,price:newPrice}:sp);
+      await saveStoreProducts(updatedProds);
+      storeProds=updatedProds;
+    } else {
+      await patchInv(msInvId, { price: newPrice });
+      const idx=invProds.findIndex(x=>x.id===msInvId);
+      if(idx>=0) invProds[idx].price=newPrice;
+    }
+    updateStats(); renderTab1(); renderTab2(); renderTab3();
+    closeModal('modal-sync');
+    toast('✅ تم مزامنة السعر: $'+fmt(newPrice));
+  } catch(e){ toast('❌ '+e.message); }
+  hideLoading();
+}
+
+// ══════════════════════════════════════════════
+// إضافة صورة الجرد للمتجر
+// ══════════════════════════════════════════════
+async function addImgToStore(invId, storeId){
+  const invP  =invProds.find(x=>x.id===invId);
+  const storeP=storeProds.find(x=>x.id===storeId);
+  if(!invP||!storeP||!invP.image_url) return;
+
+  showLoading('جارٍ إضافة الصورة...');
+  try {
+    const imgs=[...(storeP.images||[])];
+    if(!imgs.includes(invP.image_url)) imgs.push(invP.image_url);
+    const updatedProds=storeProds.map(sp=>sp.id===storeId?{...sp,images:imgs}:sp);
+    await saveStoreProducts(updatedProds);
+    storeProds=updatedProds;
+    updateStats(); renderTab3();
+    toast('✅ تم إضافة الصورة للمتجر');
+  } catch(e){ toast('❌ '+e.message); }
+  hideLoading();
+}
+
+// ══════════════════════════════════════════════
+// SAVE STORE PRODUCTS
+// ══════════════════════════════════════════════
+async function saveStoreProducts(prods){
+  if(!_sbStore) initClients();
+  const { error } = await _sbStore
+    .from(getStoreTable())
+    .update({ products: prods })
+    .eq('id', 1);
+  if(error) throw new Error('فشل الحفظ في المتجر: ' + error.message);
+}
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  initClients();
+  reloadAll();
+});
+</script>
+</body>
+</html>
